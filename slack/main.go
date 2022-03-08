@@ -26,6 +26,7 @@ import (
 
 const (
 	webhookURLSecretName = "webhookUrl"
+	GH_ORG_NAME          = "flinkstech"
 )
 
 func main() {
@@ -79,36 +80,72 @@ func (s *slackNotifier) SendNotification(ctx context.Context, build *cbpb.Build)
 }
 
 func (s *slackNotifier) writeMessage(build *cbpb.Build) (*slack.WebhookMessage, error) {
-	txt := fmt.Sprintf(
-		"Cloud Build (%s, %s): %s",
-		build.ProjectId,
-		build.Id,
-		build.Status,
-	)
+	BAD_STATUSES := [3]cbpb.Build_Status{cbpb.Build_FAILURE, cbpb.Build_INTERNAL_ERROR, cbpb.Build_TIMEOUT}
+	var failedStep *cbpb.BuildStep
+	statusMsg := ""
 
 	var clr string
 	switch build.Status {
 	case cbpb.Build_SUCCESS:
 		clr = "good"
+		statusMsg = "has succeeded"
 	case cbpb.Build_FAILURE, cbpb.Build_INTERNAL_ERROR, cbpb.Build_TIMEOUT:
 		clr = "danger"
+		statusMsg = "has failed"
 	default:
 		clr = "warning"
 	}
+
+	for _, step := range build.Steps {
+		for _, status := range BAD_STATUSES {
+			if step.Status == status {
+				failedStep = step
+				statusMsg += failedStep.Id
+			}
+		}
+	}
+
+	txt := fmt.Sprintf(
+		"Build for commit '%s' on branch '%s' %s",
+		build.Substitutions["SHORT_SHA"],
+		build.Substitutions["BRANCH_NAME"],
+		statusMsg,
+	)
 
 	logURL, err := notifiers.AddUTMParams(build.LogUrl, notifiers.ChatMedium)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add UTM params: %w", err)
 	}
 
+	var pr slack.AttachmentAction
+	if build.Substitutions["BRANCH_NAME"] != "master" && build.Substitutions["_PR_NUMBER"] != "" {
+		pr = slack.AttachmentAction{
+			Text: "View PR",
+			Type: "button",
+			URL: fmt.Sprintf(
+				"https://github.com/%s/%s/pull/%s",
+				GH_ORG_NAME,
+				build.Substitutions["REPO_NAME"],
+				build.Substitutions["_PR_NUMBER"]),
+		}
+	}
+
 	atch := slack.Attachment{
 		Text:  txt,
 		Color: clr,
 		Actions: []slack.AttachmentAction{{
-			Text: "View Logs",
+			Text: "View on GCB",
 			Type: "button",
 			URL:  logURL,
-		}},
+		}, {
+			Text: "View commit",
+			Type: "button",
+			URL: fmt.Sprintf(
+				"https://github.com/%s/%s/commit/%s",
+				GH_ORG_NAME,
+				build.Substitutions["REPO_NAME"],
+				build.Substitutions["COMMIT_SHA"]),
+		}, pr},
 	}
 
 	return &slack.WebhookMessage{Attachments: []slack.Attachment{atch}}, nil

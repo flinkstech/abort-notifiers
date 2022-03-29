@@ -100,7 +100,7 @@ func (s *slackNotifier) writeMessage(build *cbpb.Build) (*slack.WebhookMessage, 
 		for _, status := range BAD_STATUSES {
 			if step.Status == status {
 				failedStep = step
-				statusMsg += failedStep.Id
+				statusMsg += fmt.Sprintf(" %s", failedStep.Id)
 			}
 		}
 	}

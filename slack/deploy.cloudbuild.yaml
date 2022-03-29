@@ -40,7 +40,7 @@ options:
 substitutions:
   _REGISTRY: gcr.io/flinks-build/cloud-build-notifiers
   # Looks like: $NOTIF-$MAJOR-latest. Not meant for overriding.
-  _MAJOR_LATEST: "${TAG_NAME%%.*}-latest"
+  _MAJOR_LATEST: "${_GENERATED_APPLICATION_VERSION%%.*}-latest"
   # We'll generate the application version being using TAG_NAME or SHORT_SHA
   _GENERATED_APPLICATION_VERSION: ${TAG_NAME:-${SHORT_SHA}}
 

@@ -117,9 +117,9 @@ func (s *slackNotifier) writeMessage(build *cbpb.Build) (*slack.WebhookMessage, 
 		return nil, fmt.Errorf("failed to add UTM params: %w", err)
 	}
 
-	var pr slack.AttachmentAction
+	var pr *slack.AttachmentAction
 	if build.Substitutions["BRANCH_NAME"] != "master" && build.Substitutions["_PR_NUMBER"] != "" {
-		pr = slack.AttachmentAction{
+		*pr = slack.AttachmentAction{
 			Text: "View PR",
 			Type: "button",
 			URL: fmt.Sprintf(
@@ -130,22 +130,28 @@ func (s *slackNotifier) writeMessage(build *cbpb.Build) (*slack.WebhookMessage, 
 		}
 	}
 
+	actions := []slack.AttachmentAction{{
+		Text: "View on GCB",
+		Type: "button",
+		URL:  logURL,
+	}, {
+		Text: "View commit",
+		Type: "button",
+		URL: fmt.Sprintf(
+			"https://github.com/%s/%s/commit/%s",
+			GH_ORG_NAME,
+			build.Substitutions["REPO_NAME"],
+			build.Substitutions["COMMIT_SHA"]),
+	}}
+
+	if pr != nil {
+		actions = append(actions, *pr)
+	}
+
 	atch := slack.Attachment{
-		Text:  txt,
-		Color: clr,
-		Actions: []slack.AttachmentAction{{
-			Text: "View on GCB",
-			Type: "button",
-			URL:  logURL,
-		}, {
-			Text: "View commit",
-			Type: "button",
-			URL: fmt.Sprintf(
-				"https://github.com/%s/%s/commit/%s",
-				GH_ORG_NAME,
-				build.Substitutions["REPO_NAME"],
-				build.Substitutions["COMMIT_SHA"]),
-		}, pr},
+		Text:    txt,
+		Color:   clr,
+		Actions: actions,
 	}
 
 	return &slack.WebhookMessage{Attachments: []slack.Attachment{atch}}, nil

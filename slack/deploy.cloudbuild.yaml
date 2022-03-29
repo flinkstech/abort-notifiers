@@ -17,20 +17,20 @@ steps:
 - name: gcr.io/cloud-builders/docker
   args:
   - build
-  - --tag=${_REGISTRY}/slack:${TAG_NAME}
+  - --tag=${_REGISTRY}/slack:${_GENERATED_APPLICATION_VERSION}
   - --tag=${_REGISTRY}/slack:${_MAJOR_LATEST}
   - --tag=${_REGISTRY}/slack:latest
   - --file=./slack/Dockerfile
   - '.'
 # Run the smoketest to verify that everything built correctly.
-- name: ${_REGISTRY}/slack:${TAG_NAME}
+- name: ${_REGISTRY}/slack:${_GENERATED_APPLICATION_VERSION}
   args:
   - --smoketest
   - --alsologtostderr
 
 # Push the image with tags.
 images:
-- ${_REGISTRY}/slack:${TAG_NAME}
+- ${_REGISTRY}/slack:${_GENERATED_APPLICATION_VERSION}
 - ${_REGISTRY}/slack:${_MAJOR_LATEST}
 - ${_REGISTRY}/slack:latest
 
@@ -46,4 +46,4 @@ substitutions:
 
 tags:
 - cloud-build-notifiers-slack
-- slack-${TAG_NAME}
+- slack-${_GENERATED_APPLICATION_VERSION}

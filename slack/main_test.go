@@ -36,8 +36,8 @@ func TestWriteMessage(t *testing.T) {
 		Attachments: []slack.Attachment{{
 			Text: fmt.Sprintf("Build for commit '%s' on branch '%s' of repo `%s` has succeeded",
 				s["SHORT_SHA"],
-				s["REPO_NAME"],
-				s["BRANCH_NAME"]),
+				s["BRANCH_NAME"],
+				s["REPO_NAME"]),
 			Color: "good",
 			Actions: []slack.AttachmentAction{{
 				Text: "View on GCB",

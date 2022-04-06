@@ -34,8 +34,9 @@ func TestWriteMessage(t *testing.T) {
 
 	want := &slack.WebhookMessage{
 		Attachments: []slack.Attachment{{
-			Text: fmt.Sprintf("Build for commit '%s' on branch '%s' has succeeded",
+			Text: fmt.Sprintf("Build for commit '%s' on branch '%s' of repo %s has succeeded",
 				s["SHORT_SHA"],
+				s["REPO_NAME"],
 				s["BRANCH_NAME"]),
 			Color: "good",
 			Actions: []slack.AttachmentAction{{

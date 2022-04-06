@@ -106,7 +106,7 @@ func (s *slackNotifier) writeMessage(build *cbpb.Build) (*slack.WebhookMessage, 
 	}
 
 	txt := fmt.Sprintf(
-		"Build for commit '%s' on branch '%s' on repo %s %s",
+		"Build for commit '%s' on branch '%s' of repo %s %s",
 		build.Substitutions["SHORT_SHA"],
 		build.Substitutions["BRANCH_NAME"],
 		build.Substitutions["REPO_NAME"],
